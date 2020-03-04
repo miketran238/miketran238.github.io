@@ -1,0 +1,127 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Mike Tran's Blog</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="" />
+    <meta name="keywords" content="portfolio, personal, CV, resume" />
+    <meta name="author" content="mike-tran" />
+    <!-- <link href="css/prettify.css" type="text/css" rel="stylesheet" /> -->
+    <!-- <script type="text/javascript" src="js/prettify.js"></script> -->
+    <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+</head>
+
+<body>
+    <div class="introduction">
+        <h1> An interesting sliding-window problem</h1>
+        Last week I encountered an interesting problem at the LeetCode contest. <br>
+        The problem could be found here: <a
+            href="https://leetcode.com/problems/number-of-substrings-containing-all-three-characters/">
+            <texttt>Problem 1358</texttt>
+        </a> <br>
+        I could only think of a brute force solution at the time of the contest. And as I expect,
+        there must be an elegant solution to this problem. <br>
+        So let's jump into it as I will show you my thought process, my progress to
+        reverse-engineer the solution, and 4 solutions with increasing optimization for this problem <br>
+    </div>
+    <div class="body">
+        <section class="Solution">
+            <h2>Brute Force solution </h2>
+            <p>This is straight forward: check every substring, scan the substring.
+                if we have encountered at least one occurence of the 3 characters </br>
+                This is not accepted by Leetcode as it exceeds the time limitation. <br>
+                The running time is upper-bounded by n<sup>3</sup> as n is the length of the <code>string s</code>.
+                Space complexity is trivial.
+            </p>
+            <pre class="prettyprint lang-java">
+                    public int numberOfSubstrings(String s) { 
+                        char[] ca = s.toCharArray();
+                        int n = ca.length;
+                        int count = 0;
+                        for (int len = 1; len <= n; len++) { 
+                            for (int i = 0; i <= n - len; i++) { 
+                                int j = i + len - 1;
+                                boolean hasA = false, hasB = false, hasC = false;
+                                for (int k = i; k <= j; k++) { 
+                                    if ( ca[k] == 'a' ) hasA = true;
+                                    if ( ca[k] == 'b' ) hasB = true;
+                                    if ( ca[k] == 'c' ) hasC = true;
+                                    if ( hasA && hasB && hasC ) {
+                                        count++;
+                                        break;
+                                    }
+                                } 
+                            } 
+                        } 
+                        return count;
+                    }
+            </pre>
+        </section>
+
+        <section class="Solution">
+            <h2> Two-Pointers / Sliding-Window solution</h2>
+            <p>
+                <!-- As I know this problem requires two-pointers/ sliding-window technique, I comes up with a new solution. <br> -->
+                There are multiple things to take note from the problem, before we are diving into the solution <br>
+                <ul> 
+                    <li> What is a <i>substring</i>? A string is bounded by a continuous range inbetween the 
+                        normal range of the original string. <br>
+                    This leads us to think of using two pointers to define the substring (1)</li>
+                    <li> The <code>string s</code>has only character a,b,c. That could help us some memory if we want to count the 
+                    number of occurences or the last index of a typical character (2)</li>
+                    <li> We need to care only to substring that at least one occurrence of a, b and c. <br>
+                        In anotherword, if a substring starting position i and ending at position j satisfies the condition, 
+                        all the other substrings starting at i and ending at j+1 to n will also satisiies the condition. (3)
+                    </li>
+                </ul>
+            </p>
+            <p>
+                With the note in mind, let's formulate the solution. <br>
+                To count all the satisfied substrings, we have two kinds of counting: forward and backward.<br>
+                <b>Forward: </b>  As we iterate the string s, once we find all occurrences of a,b,c. All the substrings described in (3)
+                will also be counted. How many number of such substrings? <br>
+                Suppose we are at position i, then the answer is <code>(s.length() - i) </code> <br>
+                <b>Backward: </b> Once we found all occurences, we need to includes backward to the smallest index of a character that makes 
+                the substring valid. This should be our slow pointer <br>
+                A slow pointer (j) marks the first occurence of a character that makes the substring valid. <br>
+                For example, the string <code> "aaacbb" </code> will have (j) equals to 0 all the time until (i) reaches position 4. <br>
+                Then the number of the backward counting is the range from (j) to the smallest index of a character that appears until (i)
+                times (s.length()-i).<br>
+                Let's call that smallest index <code>lastMin</code>. In the example, it is 2 (last time we encountered 'a'). <br>
+                Sounds confusing? Yes, in fact later we could merge lastMin and j altogether! But for now, let's keep them seperate.  <br>
+                Total counting will be: <code> (lastMin - j) * (s.length()-i) </code> <br>
+                We will update the result once we found all occurences, but how will we update <code>j</code> for the next iteration? <br>
+                Once we found all occurences, we update: 
+                <code> j = lastMin + 1 </code>
+                Thanks to (2), we could use a simple array <code>cnt[3]</code> to keep track of the character counts. 
+                If you are still with me, coding all of this out is straight forward. 
+            </p>
+            <pre class="prettyprint lang-java">
+                    public int numberOfSubstrings(String s) {
+                        int j = 0, res = 0;
+                        int[] cnt = {0,0,0};
+                        int[] last = {-1,-1,-1}; //Last index of an occurence of a,b or c 
+                        for(int i = 0; i < s.length(); i++) {
+                            cnt[s.charAt(i)-'a']++;
+                            last[s.charAt(i) - 'a'] = i;
+                            if ( cnt[0] > 0 && cnt[1] > 0 && cnt[2] > 0 ) {
+                                int lastMin = Math.min(Math.min(last[0], last[1]), last[2]);
+                                res += (s.length() - i) * (lastMin - j + 1);
+                                for( int k = j; k <= lastMin; k++) {
+                                    cnt[s.charAt(k)-'a']--;
+                                }
+                                j = lastMin+1; 
+                            }
+                        }
+                        return res;
+                    }
+            </pre>
+        </section>
+    </div>
+
+</body>
+
+</html>
