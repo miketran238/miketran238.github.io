@@ -11,7 +11,7 @@
     <meta name="author" content="mike-tran" />
     <!-- <link href="css/prettify.css" type="text/css" rel="stylesheet" /> -->
     <!-- <script type="text/javascript" src="js/prettify.js"></script> -->
-    <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js?lang=java&amp;skin=sunburst"></script>
 </head>
 
 <body>
@@ -70,9 +70,9 @@
                     <li> What is a <i>substring</i>? A string is bounded by a continuous range inbetween the 
                         normal range of the original string. <br>
                     This leads us to think of using two pointers to define the substring (1)</li>
-                    <li> The <code>string s</code>has only character a,b,c. That could help us some memory if we want to count the 
+                    <li> The <code>string s</code> has only character a,b,c. That could help us save some memory if we want to count the 
                     number of occurences or the last index of a typical character (2)</li>
-                    <li> We need to care only to substring that at least one occurrence of a, b and c. <br>
+                    <li> We need to only care to substring that contains at least one occurrence of a, b and c. <br>
                         In anotherword, if a substring starting position i and ending at position j satisfies the condition, 
                         all the other substrings starting at i and ending at j+1 to n will also satisiies the condition. (3)
                     </li>
@@ -84,20 +84,25 @@
                 <b>Forward: </b>  As we iterate the string s, once we find all occurrences of a,b,c. All the substrings described in (3)
                 will also be counted. How many number of such substrings? <br>
                 Suppose we are at position i, then the answer is <code>(s.length() - i) </code> <br>
+                We will update the result once we saw all occurences. <br>
+                Thanks to (2), we could use a simple array <code>cnt[3]</code> to keep track of the character counts. <br>
+
                 <b>Backward: </b> Once we found all occurences, we need to includes backward to the smallest index of a character that makes 
-                the substring valid. This should be our slow pointer <br>
+                the substring valid. This is our slow pointer <br>
                 A slow pointer (j) marks the first occurence of a character that makes the substring valid. <br>
+                
+                Once we see all the occurences, we increment the slow pointer, and reduces the count of the characters. <br>
+                But how much we increment? We simply increment it untils (j) meets the index that makes the smallest validated 
+                substring  <br>
+                Let's call that position <code>lastMin</code> <br>
                 For example, the string <code> "aaacbb" </code> will have (j) equals to 0 all the time until (i) reaches position 4. <br>
-                Then the number of the backward counting is the range from (j) to the smallest index of a character that appears until (i)
-                times (s.length()-i).<br>
-                Let's call that smallest index <code>lastMin</code>. In the example, it is 2 (last time we encountered 'a'). <br>
+                Then it will be increment to lastMin = 2, where it is the last 'a' that makes the smallest substring 'acb' valid. <br>
+                
+
                 Sounds confusing? Yes, in fact later we could merge lastMin and j altogether! But for now, let's keep them seperate.  <br>
-                Total counting will be: <code> (lastMin - j) * (s.length()-i) </code> <br>
-                We will update the result once we found all occurences, but how will we update <code>j</code> for the next iteration? <br>
-                Once we found all occurences, we update: 
-                <code> j = lastMin + 1 </code>
-                Thanks to (2), we could use a simple array <code>cnt[3]</code> to keep track of the character counts. 
-                If you are still with me, coding all of this out is straight forward. 
+                Backward counting will be equals:  <code>(s.length()-i) * (lastMin - j)</code> <br>
+                <b>Total Counting</b> will be: <code>(s.length()-i) * (lastMin - j + 1)</code> <br>
+                If you are still with me, coding all of this is straight forward. 
             </p>
             <pre class="prettyprint lang-java">
                     public int numberOfSubstrings(String s) {
@@ -119,7 +124,57 @@
                         return res;
                     }
             </pre>
+            <p> The algorithm is bounded by n<sup>2</sup>, which is a much better solution than our brute force approach.
+            <br> Fortunately, the space complexity is still trivial</p>
         </section>
+
+        <section class="solution">
+            <h2> Elegant Two-Pointer / Sliding Window </h2>
+            <p> I think the code in the second approach is not concise and elegant enough. 
+                <br> Let's improve it! 
+                <br> Coming back to the point I said that lastMin and j are very similar. Indeed they are, one is a lower bound and the other 
+                is an upper bound of valid substrings. Can we use just one variable j instead? 
+                <br> Yes we can! Then how do we know how much to increment j? 
+                <br> By definition of lastMin and we keep decreasing the count until j meets lastMin, 
+                lastMin also represents the index that one of the count is reaching 0. 
+                <br> So to remove lastMin, we could simply change the <code> if ( cnt[0] > 0 && cnt[1] > 0 && cnt[2] > 0 ) </code>
+                to a while loop. And we also need to change the line <code> j = lastMin + 1; </code> to <code> j++; </code>
+                <br> How about the counting line? It still looks clumsy and requires lastMin. 
+                <br> Since the counting line is now under the <code>while</code>> loop, it has the compound effect. 
+                <br> <code>(lastMin - j + 1)</code>  is simply the number of times the <code>while</code> loop executes. Then we can safely remove it.
+                <br> The code becomes very concise and clear.
+            </p>
+
+            <pre class="prettyprint lang-java">
+                    public int numberOfSubstrings(String s) {
+                        int j = 0, res = 0;
+                        int[] cnt = {0,0,0};
+                        for(int i = 0; i < s.length(); i++) {
+                            cnt[s.charAt(i)-'a']++;
+                            while ( cnt[0] > 0 && cnt[1] > 0 && cnt[2] > 0 ) {
+                                cnt[ s.charAt(j++) - 'a']--; 
+                                res+= (s.length() - i); //The nested loop compound takes care of the backward counting
+                            }
+                        }
+                        return res;
+                    }
+            </pre>
+            <p> The time and space complexity are still the same. We just make the code looks better</p>
+        </section>
+
+        <section class="solution">
+            <h2> Can we do better? </h2>
+            <p> I'm thinking of getting rid of the while loop so we can achieve O(n) performance. 
+                <br> However, the while loop is co-existed with the slow pointer (j). 
+                <br> So if we remove the while loop, we also needs to remove (j). What can we use in exchange of (j)?
+                <br> Yay! You got it, we need to re-taking in the substitution of (j), <code>lastMin</code>. 
+                <br> Fortunately, lastMin can be calcuated anytime and outsisde of the while loop. 
+                <br> How can we move the line <code> res+= (s.length() - i); </code> out of the while loop? 
+                <br> Also looking back at the forward counting calculation, do we need to do it before hand? 
+                <br> If we don't, we need to increase <code>res</code> by a compound value. 
+                <br> If you remember, the while loop runs for <code>lastMin - j + 1 </code>. times
+            </p>
+        </section> 
     </div>
 
 </body>
