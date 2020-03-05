@@ -37,27 +37,27 @@
                 Space complexity is trivial.
             </p>
             <pre class="prettyprint lang-java">
-                    public int numberOfSubstrings(String s) { 
-                        char[] ca = s.toCharArray();
-                        int n = ca.length;
-                        int count = 0;
-                        for (int len = 1; len <= n; len++) { 
-                            for (int i = 0; i <= n - len; i++) { 
-                                int j = i + len - 1;
-                                boolean hasA = false, hasB = false, hasC = false;
-                                for (int k = i; k <= j; k++) { 
-                                    if ( ca[k] == 'a' ) hasA = true;
-                                    if ( ca[k] == 'b' ) hasB = true;
-                                    if ( ca[k] == 'c' ) hasC = true;
-                                    if ( hasA && hasB && hasC ) {
-                                        count++;
-                                        break;
-                                    }
-                                } 
+                public int numberOfSubstrings(String s) { 
+                    char[] ca = s.toCharArray();
+                    int n = ca.length;
+                    int count = 0;
+                    for (int len = 1; len <= n; len++) { 
+                        for (int i = 0; i <= n - len; i++) { 
+                            int j = i + len - 1;
+                            boolean hasA = false, hasB = false, hasC = false;
+                            for (int k = i; k <= j; k++) { 
+                                if ( ca[k] == 'a' ) hasA = true;
+                                if ( ca[k] == 'b' ) hasB = true;
+                                if ( ca[k] == 'c' ) hasC = true;
+                                if ( hasA && hasB && hasC ) {
+                                    count++;
+                                    break;
+                                }
                             } 
                         } 
-                        return count;
-                    }
+                    } 
+                    return count;
+                }
             </pre>
         </section>
 
@@ -105,24 +105,24 @@
                 If you are still with me, coding all of this is straight forward. 
             </p>
             <pre class="prettyprint lang-java">
-                    public int numberOfSubstrings(String s) {
-                        int j = 0, res = 0;
-                        int[] cnt = {0,0,0};
-                        int[] last = {-1,-1,-1}; //Last index of an occurence of a,b or c 
-                        for(int i = 0; i < s.length(); i++) {
-                            cnt[s.charAt(i)-'a']++;
-                            last[s.charAt(i) - 'a'] = i;
-                            if ( cnt[0] > 0 && cnt[1] > 0 && cnt[2] > 0 ) {
-                                int lastMin = Math.min(Math.min(last[0], last[1]), last[2]);
-                                res += (s.length() - i) * (lastMin - j + 1);
-                                for( int k = j; k <= lastMin; k++) {
-                                    cnt[s.charAt(k)-'a']--;
-                                }
-                                j = lastMin+1; 
+                public int numberOfSubstrings(String s) {
+                    int j = 0, res = 0;
+                    int[] cnt = {0,0,0};
+                    int[] last = {-1,-1,-1}; //Last index of an occurence of a,b or c 
+                    for(int i = 0; i < s.length(); i++) {
+                        cnt[s.charAt(i)-'a']++;
+                        last[s.charAt(i) - 'a'] = i;
+                        if ( cnt[0] > 0 && cnt[1] > 0 && cnt[2] > 0 ) {
+                            int lastMin = Math.min(Math.min(last[0], last[1]), last[2]);
+                            res += (s.length() - i) * (lastMin - j + 1);
+                            for( int k = j; k <= lastMin; k++) {
+                                cnt[s.charAt(k)-'a']--;
                             }
+                            j = lastMin+1; 
                         }
-                        return res;
                     }
+                    return res;
+                }
             </pre>
             <p> The algorithm is bounded by n<sup>2</sup>, which is a much better solution than our brute force approach.
             <br> Fortunately, the space complexity is still trivial</p>
@@ -136,7 +136,7 @@
                 is an upper bound of valid substrings. Can we use just one variable j instead? 
                 <br> Yes we can! Then how do we know how much to increment j? 
                 <br> By definition of lastMin and we keep decreasing the count until j meets lastMin, 
-                lastMin also represents the index that one of the count is reaching 0. 
+                lastMin also represents the index when one of the count is reaching 0. 
                 <br> So to remove lastMin, we could simply change the <code> if ( cnt[0] > 0 && cnt[1] > 0 && cnt[2] > 0 ) </code>
                 to a while loop. And we also need to change the line <code> j = lastMin + 1; </code> to <code> j++; </code>
                 <br> How about the counting line? It still looks clumsy and requires lastMin. 
@@ -146,18 +146,18 @@
             </p>
 
             <pre class="prettyprint lang-java">
-                    public int numberOfSubstrings(String s) {
-                        int j = 0, res = 0;
-                        int[] cnt = {0,0,0};
-                        for(int i = 0; i < s.length(); i++) {
-                            cnt[s.charAt(i)-'a']++;
-                            while ( cnt[0] > 0 && cnt[1] > 0 && cnt[2] > 0 ) {
-                                cnt[ s.charAt(j++) - 'a']--; 
-                                res+= (s.length() - i); //The nested loop compound takes care of the backward counting
-                            }
+                public int numberOfSubstrings(String s) {
+                    int j = 0, res = 0;
+                    int[] cnt = {0,0,0};
+                    for(int i = 0; i < s.length(); i++) {
+                        cnt[s.charAt(i)-'a']++;
+                        while ( cnt[0] > 0 && cnt[1] > 0 && cnt[2] > 0 ) {
+                            cnt[ s.charAt(j++) - 'a']--; 
+                            res+= (s.length() - i); //The nested loop compound takes care of the backward counting
                         }
-                        return res;
                     }
+                    return res;
+                }
             </pre>
             <p> The time and space complexity are still the same. We just make the code looks better</p>
         </section>
@@ -171,8 +171,50 @@
                 <br> Fortunately, lastMin can be calcuated anytime and outsisde of the while loop. 
                 <br> How can we move the line <code> res+= (s.length() - i); </code> out of the while loop? 
                 <br> Also looking back at the forward counting calculation, do we need to do it before hand? 
-                <br> If we don't, we need to increase <code>res</code> by a compound value. 
-                <br> If you remember, the while loop runs for <code>lastMin - j + 1 </code>. times
+                <br> If we don't, we need to increase <code>res</code> by a compound value. We can do so by remembering a value. 
+                <br> Everytimes we encounter a valid substring, we increase that value, and increase res by that value.
+                <br> Due to (3), that value will be compounded, and never be reset. The way that value works is exactly (j).
+                <br> Now, we can change the following snippet of code from:
+                <pre class="prettyprint">
+                    while ( cnt[0] > 0 && cnt[1] > 0 && cnt[2] > 0 ) {
+                        cnt[ s.charAt(j++) - 'a']--; 
+                        res+= (s.length() - i); 
+                    }
+                </pre>
+                <br> to the following code:
+                <pre class="prettyprint">
+                    while ( cnt[0] > 0 && cnt[1] > 0 && cnt[2] > 0 ) {
+                        cnt[ s.charAt(j++) - 'a']--; 
+                    }
+                    res += j;
+                </pre>
+                <br> If you remember, the while loop runs for <code>lastMin - j + 1 </code> times. Until the end of it, <code>j</code> 
+                will become <code>lastMin + 1</code>.
+                <br> As lastMin doesn't tie with the while loop, we can get rid of the cnt[] altogether. 
+                <br> Putting them all together, we have the final elegant O(n) solution:
+            </p>
+            <pre class="prettyprint">
+                public int numberOfSubstrings(String s) {
+                    int j = 0, res = 0;
+                    int[] last = {-1,-1,-1}; //Last index of an occurence of a,b or c 
+                    for(int i = 0; i < s.length(); i++) {
+                        last[s.charAt(i) - 'a'] = i;
+                        int lastMin = Math.min(Math.min(last[0], last[1]), last[2]);
+                        res += lastMin + 1;
+                    }
+                    return res;
+                }
+            </pre>
+            <p> Now, with we still need to convince ourself why the code works. 
+                <br> How can the lastMin also check if a substring is valid? Because we initialize all element of last[] to -1, 
+                if we haven't seen all occurrences of all characters yet, lastMin + 1 is 0. 
+                <br> So we won't increase res if we haven't seen a valid substring. 
+                <br> Once we see a valid substring, we will compound that value as lastMin will always increase, never be reset.
+                <br> On the other hand, the substring range from lastMin to current index i is also the smallest valid substring. 
+                <br> Then, all the substrings starting from index 0, 1, 2, 3,..lastMin and ending at i are valid. There are lastMin + 1
+                numbers of those substrings. 
+                <br> The lastMin will only change when we see all occurerences of 'a','b','c' again. So it acts doubly as our <code> cnt[]</code>,
+                and our <code> j </code> as before. 
             </p>
         </section> 
     </div>
