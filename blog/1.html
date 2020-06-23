@@ -58,7 +58,7 @@
                 The running time is upper-bounded by n<sup>3</sup> as n is the length of the <code>string s</code>.
                 Space complexity is trivial.
             </p>
-            <pre class="prettyprint lang-java">
+            <pre class="prettyprint linenums lang-java">
                 public int numberOfSubstrings(String s) { 
                     char[] ca = s.toCharArray();
                     int n = ca.length;
@@ -103,8 +103,8 @@
             <p>
                 With the note in mind, let's formulate the solution. <br>
                 To count all the satisfied substrings, we have two kinds of counting: forward and backward.<br>
-                <b>Forward: </b>  As we iterate the string s, once we find all occurrences of a,b,c. All the substrings described in (3)
-                will also be counted. How many number of such substrings? <br>
+                <b>Forward: </b>  As we iterate the string s, once we find a satisfied substring, all substrings extend from it until the end of the main string as described in (3)
+                will also satisfy. How many number of such substrings? <br>
                 Suppose we are at position i, then the answer is <code>(s.length() - i) </code> <br>
                 We will update the result once we saw all occurences. <br>
                 Thanks to (2), we could use a simple array <code>cnt[3]</code> to keep track of the character counts. <br>
@@ -126,7 +126,7 @@
                 <b>Total Counting</b> will be: <code>(s.length()-i) * (lastMin - j + 1)</code> <br>
                 If you are still with me, coding all of this is straight forward. 
             </p>
-            <pre class="prettyprint lang-java">
+            <pre class="prettyprint linenums lang-java">
                 public int numberOfSubstrings(String s) {
                     int j = 0, res = 0;
                     int[] cnt = {0,0,0};
@@ -161,13 +161,13 @@
                 lastMin also represents the index when one of the count is reaching 0. 
                 <br> So to remove lastMin, we could simply change the <code> if ( cnt[0] > 0 && cnt[1] > 0 && cnt[2] > 0 ) </code>
                 to a while loop. And we also need to change the line <code> j = lastMin + 1; </code> to <code> j++; </code>
-                <br> How about the counting line? It still looks clumsy and requires lastMin. 
+                <br> How about the counting line toward the result? It still looks clumsy and requires lastMin. 
                 <br> Since the counting line is now under the <code>while</code>> loop, it has the compound effect. 
                 <br> <code>(lastMin - j + 1)</code>  is simply the number of times the <code>while</code> loop executes. Then we can safely remove it.
                 <br> The code becomes very concise and clear.
             </p>
 
-            <pre class="prettyprint lang-java">
+            <pre class="prettyprint linenums lang-java">
                 public int numberOfSubstrings(String s) {
                     int j = 0, res = 0;
                     int[] cnt = {0,0,0};
@@ -215,7 +215,7 @@
                 <br> As lastMin doesn't tie with the while loop, we can get rid of the cnt[] altogether. 
                 <br> Putting them all together, we have the final elegant O(n) solution:
             </p>
-            <pre class="prettyprint">
+            <pre class="prettyprint linenums">
                 public int numberOfSubstrings(String s) {
                     int j = 0, res = 0;
                     int[] last = {-1,-1,-1}; //Last index of an occurence of a,b or c 
