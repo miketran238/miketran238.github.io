@@ -13,7 +13,9 @@
     <!-- <script type="text/javascript" src="js/prettify.js"></script> -->
     <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js?lang=java&amp;skin=sunburst"></script>
 </head>
-
+<style>
+    .prettyprint ol.linenums > li { list-style-type: decimal; }
+</style>
 <body>
     <div class="introduction">
         <h1> An interesting sliding-window problem</h1>
@@ -79,8 +81,7 @@
                         } 
                     } 
                     return count;
-                }
-            </pre>
+                }</pre>
         </section>
 
         <section class="Solution">
@@ -104,27 +105,21 @@
                 With the note in mind, let's formulate the solution. <br>
                 To count all the satisfied substrings, we have two kinds of counting: forward and backward.<br>
                 <b>Forward: </b>  As we iterate the string s, once we find a satisfied substring, all substrings extend from it until the end of the main string as described in (3)
-                will also satisfy. How many number of such substrings? <br>
+                will also satisfy. How many number of such substrings for a valid substring? <br>
                 Suppose we are at position i, then the answer is <code>(s.length() - i) </code> <br>
                 We will update the result once we saw all occurences. <br>
                 Thanks to (2), we could use a simple array <code>cnt[3]</code> to keep track of the character counts. <br>
 
-                <b>Backward: </b> Once we found all occurences, we need to includes backward to the smallest index of a character that makes 
-                the substring valid. This is our slow pointer <br>
-                A slow pointer (j) marks the first occurence of a character that makes the substring valid. <br>
-                
-                Once we see all the occurences, we increment the slow pointer, and reduces the count of the characters. <br>
-                But how much we increment? We simply increment it untils (j) meets the index that makes the smallest validated 
-                substring  <br>
+                <b>Backward: </b> Once we find a valid substring, we need to include backward to the largest index that makes 
+                the substring valid. This is our slow pointer (j)<br>
+                We increment the slow pointer, and reduce the count of the characters until the substring is not valid anymore<br>
                 Let's call that position <code>lastMin</code> <br>
                 For example, the string <code> "aaacbb" </code> will have (j) equals to 0 all the time until (i) reaches position 4. <br>
                 Then it will be increment to lastMin = 2, where it is the last 'a' that makes the smallest substring 'acb' valid. <br>
-                
-
-                Sounds confusing? Yes, in fact later we could merge lastMin and j altogether! But for now, let's keep them seperate.  <br>
-                Backward counting will be equals:  <code>(s.length()-i) * (lastMin - j)</code> <br>
+                The number of such valid substrings is:  <code>lastMin - j + 1</code> <br>
                 <b>Total Counting</b> will be: <code>(s.length()-i) * (lastMin - j + 1)</code> <br>
-                If you are still with me, coding all of this is straight forward. 
+                If you are still with me, coding all of this is straight forward. We keep track of the lastMin position by an array <code>last[]</code>, which
+                is basically the last encounter of each character 'a','b', or 'c'. <br>
             </p>
             <pre class="prettyprint linenums lang-java">
                 public int numberOfSubstrings(String s) {
@@ -144,8 +139,7 @@
                         }
                     }
                     return res;
-                }
-            </pre>
+                }</pre>
             <p> The algorithm is bounded by n<sup>2</sup>, which is a much better solution than our brute force approach.
             <br> Fortunately, the space complexity is still trivial</p>
         </section>
@@ -154,10 +148,11 @@
             <h2> Elegant Two-Pointer / Sliding Window </h2>
             <p> I think the code in the second approach is not concise and elegant enough. 
                 <br> Let's improve it! 
-                <br> Coming back to the point I said that lastMin and j are very similar. Indeed they are, one is a lower bound and the other 
-                is an upper bound of valid substrings. Can we use just one variable j instead? 
+                <br>Notice that lastMin and j are very similar. Indeed they are, one is a lower bound and the other 
+                is an upper bound of valid substrings. 
+                <br> On the other word, lastMin is just a threshold to increment j. Can we use just one variable j instead? 
                 <br> Yes we can! Then how do we know how much to increment j? 
-                <br> By definition of lastMin and we keep decreasing the count until j meets lastMin, 
+                <br> By the definition of lastMin and we keep decreasing the count until j meets lastMin, 
                 lastMin also represents the index when one of the count is reaching 0. 
                 <br> So to remove lastMin, we could simply change the <code> if ( cnt[0] > 0 && cnt[1] > 0 && cnt[2] > 0 ) </code>
                 to a while loop. And we also need to change the line <code> j = lastMin + 1; </code> to <code> j++; </code>
@@ -179,9 +174,8 @@
                         }
                     }
                     return res;
-                }
-            </pre>
-            <p> The time and space complexity are still the same. We just make the code looks better</p>
+                }</pre>
+            <p> The time and space complexity are still the same. We just made the code look better</p>
         </section>
 
         <section class="solution">
@@ -194,22 +188,20 @@
                 <br> How can we move the line <code> res+= (s.length() - i); </code> out of the while loop? 
                 <br> Also looking back at the forward counting calculation, do we need to do it before hand? 
                 <br> If we don't, we need to increase <code>res</code> by a compound value. We can do so by remembering a value. 
-                <br> Everytimes we encounter a valid substring, we increase that value, and increase res by that value.
+                <br> Everytimes we encounter a valid substring, we increase that value, and increase res by that value in the outer loop.
                 <br> Due to (3), that value will be compounded, and never be reset. The way that value works is exactly (j).
                 <br> Now, we can change the following snippet of code from:
                 <pre class="prettyprint">
                     while ( cnt[0] > 0 && cnt[1] > 0 && cnt[2] > 0 ) {
                         cnt[ s.charAt(j++) - 'a']--; 
                         res+= (s.length() - i); 
-                    }
-                </pre>
+                    }</pre>
                 <br> to the following code:
                 <pre class="prettyprint">
                     while ( cnt[0] > 0 && cnt[1] > 0 && cnt[2] > 0 ) {
                         cnt[ s.charAt(j++) - 'a']--; 
                     }
-                    res += j;
-                </pre>
+                    res += j;</pre>
                 <br> If you remember, the while loop runs for <code>lastMin - j + 1 </code> times. Until the end of it, <code>j</code> 
                 will become <code>lastMin + 1</code>.
                 <br> As lastMin doesn't tie with the while loop, we can get rid of the cnt[] altogether. 
@@ -225,8 +217,7 @@
                         res += lastMin + 1;
                     }
                     return res;
-                }
-            </pre>
+                }</pre>
             <p> Now, with we still need to convince ourself why the code works. 
                 <br> How can the lastMin also check if a substring is valid? Because we initialize all element of last[] to -1, 
                 if we haven't seen all occurrences of all characters yet, lastMin + 1 is 0. 
